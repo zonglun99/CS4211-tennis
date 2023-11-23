@@ -40,7 +40,7 @@ to account for:
 ### Generate pcsp files
 1. Download [data](https://www.tennisabstract.com/charting/meta.html) from the website, make sure that all the data is collated into a csv file. Alternatively, download it from [here](https://drive.google.com/file/d/1pHo8PfkGxdgjsHljUf9poEF_vxhdzTA0/view?usp=sharing).
 2. Place it in the same folder as one of the models, `model_1` or `model_2`.
-3. Run the command below to generate a list of pcsp files for a set of players into the folder `pcsp_files`.
+3. Run the command below to generate a list of **253** pcsp files for a set of players into the folder `pcsp_files`.
 ```
 python3 Generate_pcsp.py
 ``` 
