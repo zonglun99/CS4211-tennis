@@ -51,23 +51,26 @@ python3 Generate_pcsp.py
 3. Move the `\model_1\pcsp.sh` file to the same directory as `PAT351`.
 4. Run the command below to generate a list of txt files verified by PAT into the folder `pcsp_out`.
 ```
-  bash pcsp.sh
+bash pcsp.sh
 ``` 
 
 5. Move the `pcsp_out` folder back to either the model folder.
 
 ### Evaluating model with betting simulation
-1. Run the command to generate output.csv file containing all the winning probabilities for a set of players.
+1. Run the command below to generate output.csv file containing all the winning probabilities for a set of players.
 ```
-  python3 extract_MDP.py
+python3 extract_MDP.py
 ```
 2. Check the naming of the csv file in `Betting_Simulation.py`, making sure that it is `output.csv`.
-3. Run the command `python3 Betting_Simulation.py` to get the evaluation results.
+3. Run the command below `python3 Betting_Simulation.py` to get the evaluation results.
 ```
-  python3 extract_MDP.py
+python3 extract_MDP.py
 ```
 
 ## Disclaimer
 * Please run all commands in the Linux command line interface (CLI)
 * The running the above steps requires the environment to be set up properly, in case of missing packages,
-do `pip install {package name}`.
+do the following command, but replace `{package name}` with the missing package.
+```
+pip install {package name}
+```
