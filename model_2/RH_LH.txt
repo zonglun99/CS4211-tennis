@@ -1,0 +1,842 @@
+TieBreakGame = WhoServe1st; (Player1Serve [] Player2Serve);
+WhoServe1st = []i:{f_de_ct,n_de_ct}@ TossCoin{turn = i} -> Skip;
+Player1Serve = [won == na && turn == f_de_ct ]FedReady_DeCt -> De_Ply1Serve [] [won == na && turn == f_ad_ct] FedReady_AdCt -> Ad_Ply1Serve;
+Player2Serve = [won == na && turn == n_de_ct]NadReady_DeCt -> De_Ply2Serve [] [ won == na && turn == n_ad_ct] NadReady_AdCt -> Ad_Ply2Serve;
+NextPt = Player1Serve [] Player2Serve [] ([won != na] GameOver -> Skip);
+
+De_Ply1Serve = pcase {                             
+			p0: ServeT_in{ball=5} -> Ply2_ForeHandR  
+			p1: ServeBody_in{ball=6} -> (Ply2_BackHandR [] Ply2_ForeHandR)
+			p2: ServeWide_in{ball=6} -> Ply2_BackHandR 
+			p3: Serve_winner{ball=9} -> FWinner{fscore++; if (fscore == points) {won = player1} 
+      		                                                        else { turn = (turn+1)%4} }-> NextPt
+			p4: Serve_err{ball=9} -> De_Ply1Serve_2nd}; 
+
+De_Ply1Serve_2nd = pcase {                 //1st serve is out
+			p5: ServeT_in{ball=5} -> Ply2_BackHandR  
+			p6: ServeBody_in{ball=6} -> (Ply2_BackHandR [] Ply2_ForeHandR)
+			p7: ServeWide_in{ball=6} -> Ply2_ForeHandR 
+			p8: Serve_winner{ball=9} -> FWinner{fscore++; if (fscore == points) {won = player1} 
+      		                                                        else { turn = (turn+1)%4} }-> NextPt
+			p9: Serve_err{ball=9} -> Fdoublefault{nscore++; if (nscore == points) {won = player2} 
+      		                                                        else { turn = (turn+1)%4} }-> NextPt
+     		 };
+
+Ad_Ply1Serve = pcase {
+			p10: ServeT_in{ball=5} -> Ply2_BackHandR  
+			p11: ServeBody_in{ball=4} -> (Ply2_BackHandR [] Ply2_ForeHandR)
+			p12: ServeWide_in{ball=4} -> Ply2_ForeHandR
+			p13: Serve_winner{ball=9} -> FWinner{fscore++; if (fscore == points) {won = player1} 
+      		                                                        else { turn = (turn+1)%4} }-> NextPt
+			p14: Serve_err{ball=9} -> Ad_Ply1Serve_2nd}; 
+
+Ad_Ply1Serve_2nd = pcase {                 //1st serve is out
+			p15: ServeT_in{ball=5} -> Ply2_BackHandR  
+			p16: ServeBody_in{ball=4} -> (Ply2_BackHandR [] Ply2_ForeHandR)
+			p17: ServeWide_in{ball=4} -> Ply2_ForeHandR
+			p18: Serve_winner{ball=9} -> FWinner{fscore++; if (fscore == points) {won = player1} 
+      		                                                        else { turn = (turn+1)%4} }-> NextPt
+			p19: Serve_err{ball=9} -> Fdoublefault{nscore++; if (nscore == points) {won = player2} 
+      		                                                        else { turn = (turn+1)%4} }-> NextPt
+     		 };    
+     		 
+Ply1_ForeHandR = ifa (turn == n_de_ct) {    // Player2 forehand return to Player1 serve from the deuce court side
+		 pcase {
+			p20: FH_CrossCourt{ball=6} -> Ply2_de_stroke_Prev_FH 
+			p21: FH_DownLine{ball=4} -> Ply2_ad_stroke_Prev_FH 
+			p22: FH_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH 
+			p23: FH_Winner{ball=9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p24: FH_Error{ball=9} -> {nscore++; if (nscore == points) {won = player2}
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+      		 }}
+      		 else {
+      		pcase {
+			p25: FH_InsideOut{ball =4} -> Ply2_ad_stroke_Prev_FH 
+			p26: FH_InsideIn{ball=6} -> Ply2_de_stroke_Prev_FH 
+			p27: FH_CrossCourt{ball=6} -> Ply2_de_stroke_Prev_FH 
+			p28: FH_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH 
+			p29: FH_Winner{ball=9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p30: FH_Error{ball=9} -> {nscore++; if (nscore == points) {won = player2}
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+      		 }};
+
+Ply1_BackHandR = ifa (turn == n_de_ct) {    // Player2 backhand return to Player1 serve from the deuce court side
+		 pcase {
+			p31: BH_CrossCourt{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p32: BH_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p33: BH_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p34: BH_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH 
+			p35: BH_Winner{ball=9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p36: BH_Error{ball=9} -> {nscore++; if (nscore == points) {won = player2}
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+      		 }}
+      		 else {
+      		pcase {
+			p37: BH_CrossCourt{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p38: BH_DownLine{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p39: BH_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH 
+			p40: BH_Winner{ball=9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p41: BH_Error{ball=9} -> {nscore++; if (nscore == points) {won = player2}
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+      		 }};
+
+// deuce stroke previous forehand is when player1 hit position is 1 and the previous shot from player2 is a forehand type of shot
+Ply1_de_stroke_Prev_FH = pcase{
+			p42: FH_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH 
+			p43: FH_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH 
+			p44: FH_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH 
+			p45: BH_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p46: BH_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p47: BH_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p48: FHLob_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH 
+			p49: FHLob_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH 
+			p50: FHLob_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH 
+			p51: BHLob_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p52: BHLob_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p53: BHLob_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p54: FHVolley_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH 
+			p55: FHVolley_CrossCourt{ball=6} -> Ply2_de_stroke_Prev_FH 
+			p56: FHVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH 
+			p57: BHVolley_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p58: BHVolley_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p59: BHVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p60: FHSmash_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH 
+			p61: FHSmash_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH 
+			p62: FHSmash_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH 
+			p63: BHSmash_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p64: BHSmash_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p65: BHSmash_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p66: FHSlice_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH 
+			p67: FHSlice_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH 
+			p68: FHSlice_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH 
+			p69: BHSlice_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p70: BHSlice_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p71: BHSlice_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p72: FHDropShot_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH 
+			p73: FHDropShot_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH 
+			p74: FHDropShot_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH 
+			p75: BHDropShot_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p76: BHDropShot_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p77: BHDropShot_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p78: FHHalfVolley_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH 
+			p79: FHHalfVolley_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH 
+			p80: FHHalfVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH 
+			p81: BHHalfVolley_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p82: BHHalfVolley_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p83: BHHalfVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p84: FHSwingingVolley_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p85: FHSwingingVolley_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p86: FHSwingingVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p87: BHSwingingVolley_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p88: BHSwingingVolley_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p89: BHSwingingVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p90: Winner{ball=9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p91: Error{ball=9} -> {nscore++; if (nscore == points) {won = player2}
+      		                                                     else { turn = (turn+1)%4} }-> NextPt  
+	};
+	
+// mid stroke previous forehand is when player1 hit position is 2 and the previous shot from player2 is a forehand type of shot
+Ply1_mid_stroke_Prev_FH = pcase{
+			p92: FH_InsideOut{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p93: FH_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p94: FH_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p95: BH_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH
+			p96: BH_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p97: BH_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p98: FHLob_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p99: FHLob_Downline{ball=6} -> Ply2_de_stroke_Prev_FH
+			p100: FHLob_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p101: BHLob_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH
+			p102: BHLob_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p103: BHLob_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p104: FHVolley_InsideIn{ball=6} -> Ply2_de_stroke_Prev_FH
+			p105: FHVolley_InsideOut{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p106: FHVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p107: BHVolley_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH
+			p108: BHVolley_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p109: BHVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p110: FHSmash_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p111: FHSmash_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p112: FHSmash_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p113: BHSmash_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH
+			p114: BHSmash_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p115: BHSmash_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p116: FHSlice_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p117: FHSlice_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p118: FHSlice_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p119: BHSlice_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH
+			p120: BHSlice_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p121: BHSlice_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p122: FHDropShot_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p123: FHDropShot_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p124: FHDropShot_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p125: BHDropShot_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH
+			p126: BHDropShot_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p127: BHDropShot_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p128: FHHalfVolley_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p129: FHHalfVolley_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p130: FHHalfVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p131: BHHalfVolley_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH
+			p132: BHHalfVolley_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p133: BHHalfVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p134: FHSwingingVolley_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p135: FHSwingingVolley_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p136: FHSwingingVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p137: BHSwingingVolley_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH
+			p138: BHSwingingVolley_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p139: BHSwingingVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p140: Winner{ball=9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p141: Error{ball=9} -> {nscore++; if (nscore == points) {won = player2}
+      		                                                     else { turn = (turn+1)%4} }-> NextPt    
+	};
+
+
+// ad stroke previous forehand is when player1 hit position is 3 and the previous shot from player2 is a forehand type of shot
+Ply1_ad_stroke_Prev_FH = pcase{
+			p142: FH_InsideOut{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p143: FH_InsideIn{ball=6} -> Ply2_de_stroke_Prev_FH
+			p144: FH_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p145: BH_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p146: BH_Downline{ball=6} -> Ply2_de_stroke_Prev_BH
+			p147: BH_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p148: FHLob_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p149: FHLob_Downline{ball=6} -> Ply2_de_stroke_Prev_FH
+			p150: FHLob_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p151: BHLob_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p152: BHLob_Downline{ball=6} -> Ply2_de_stroke_Prev_BH
+			p153: BHLob_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p154: FHVolley_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p155: FHVolley_InsideOut{ball=6} -> Ply2_de_stroke_Prev_FH
+			p156: FHVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p157: BHVolley_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p158: BHVolley_Downline{ball=6} -> Ply2_de_stroke_Prev_BH
+			p159: BHVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p160: FHSmash_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p161: FHSmash_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p162: FHSmash_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p163: BHSmash_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p164: BHSmash_Downline{ball=6} -> Ply2_de_stroke_Prev_BH
+			p165: BHSmash_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p166: FHSlice_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p167: FHSlice_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p168: FHSlice_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p169: BHSlice_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p170: BHSlice_Downline{ball=6} -> Ply2_de_stroke_Prev_BH
+			p171: BHSlice_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p172: FHDropShot_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p173: FHDropShot_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p174: FHDropShot_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p175: BHDropShot_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p176: BHDropShot_Downline{ball=6} -> Ply2_de_stroke_Prev_BH
+			p177: BHDropShot_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p178: FHHalfVolley_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p179: FHHalfVolley_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p180: FHHalfVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p181: BHHalfVolley_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p182: BHHalfVolley_Downline{ball=6} -> Ply2_de_stroke_Prev_BH
+			p183: BHHalfVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p184: FHSwingingVolley_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p185: FHSwingingVolley_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p186: FHSwingingVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p187: BHSwingingVolley_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p188: BHSwingingVolley_Downline{ball=6} -> Ply2_de_stroke_Prev_BH
+			p189: BHSwingingVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p190: Winner{ball=9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p191: Error{ball=9} -> {nscore++; if (nscore == points) {won = player2}
+      		                                                     else { turn = (turn+1)%4} }-> NextPt  
+	};
+
+// deuce stroke previous backhand is when player1 hit position is 1 and the previous shot from player2 is a backhand type of shot
+Ply1_de_stroke_Prev_BH = pcase{
+			p192: FH_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH 
+			p193: FH_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH 
+			p194: FH_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH 
+			p195: BH_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p196: BH_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p197: BH_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p198: FHLob_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH 
+			p199: FHLob_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH 
+			p200: FHLob_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH 
+			p201: BHLob_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p202: BHLob_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p203: BHLob_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p204: FHVolley_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_FH 
+			p205: FHVolley_InsideOut{ball=6} -> Ply2_de_stroke_Prev_FH 
+			p206: FHVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH 
+			p207: BHVolley_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p208: BHVolley_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p209: BHVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p210: FHSmash_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH 
+			p211: FHSmash_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH 
+			p212: FHSmash_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH 
+			p213: BHSmash_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p214: BHSmash_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p215: BHSmash_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p216: FHSlice_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH 
+			p217: FHSlice_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH 
+			p218: FHSlice_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH 
+			p219: BHSlice_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p220: BHSlice_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p221: BHSlice_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p222: FHDropShot_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH 
+			p223: FHDropShot_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH 
+			p224: FHDropShot_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH 
+			p225: BHDropShot_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p226: BHDropShot_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p227: BHDropShot_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p228: FHHalfVolley_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH 
+			p229: FHHalfVolley_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH 
+			p230: FHHalfVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH 
+			p231: BHHalfVolley_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p232: BHHalfVolley_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p233: BHHalfVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p234: FHSwingingVolley_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p235: FHSwingingVolley_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p236: FHSwingingVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p237: BHSwingingVolley_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_BH 
+			p238: BHSwingingVolley_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH 
+			p239: BHSwingingVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p240: Winner{ball=9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p241: Error{ball=9} -> {nscore++; if (nscore == points) {won = player2}
+      		                                                     else { turn = (turn+1)%4} }-> NextPt  
+	};
+	
+// mid stroke previous backhand is when player1 hit position is 2 and the previous shot from player2 is a backhand type of shot
+Ply1_mid_stroke_Prev_BH = pcase{
+			p242: FH_InsideOut{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p243: FH_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p244: FH_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p245: BH_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH
+			p246: BH_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p247: BH_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p248: FHLob_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p249: FHLob_Downline{ball=6} -> Ply2_de_stroke_Prev_FH
+			p250: FHLob_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p251: BHLob_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH
+			p252: BHLob_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p253: BHLob_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p254: FHVolley_InsideIn{ball=6} -> Ply2_de_stroke_Prev_FH
+			p255: FHVolley_InsideOut{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p256: FHVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p257: BHVolley_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH
+			p258: BHVolley_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p259: BHVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p260: FHSmash_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p261: FHSmash_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p262: FHSmash_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p263: BHSmash_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH
+			p264: BHSmash_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p265: BHSmash_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p266: FHSlice_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p267: FHSlice_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p268: FHSlice_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p269: BHSlice_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH
+			p270: BHSlice_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p271: BHSlice_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p272: FHDropShot_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p273: FHDropShot_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p274: FHDropShot_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p275: BHDropShot_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH
+			p276: BHDropShot_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p277: BHDropShot_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p278: FHHalfVolley_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p279: FHHalfVolley_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p280: FHHalfVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p281: BHHalfVolley_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH
+			p282: BHHalfVolley_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p283: BHHalfVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p284: FHSwingingVolley_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p285: FHSwingingVolley_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p286: FHSwingingVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p287: BHSwingingVolley_InsideOut{ball=6} -> Ply2_de_stroke_Prev_BH
+			p288: BHSwingingVolley_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p289: BHSwingingVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p290: Winner{ball=9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p291: Error{ball=9} -> {nscore++; if (nscore == points) {won = player2}
+      		                                                     else { turn = (turn+1)%4} }-> NextPt    
+	};
+
+
+// ad stroke previous backhand is when player1 hit position is 3 and the previous shot from player2 is a backhand type of shot
+Ply1_ad_stroke_Prev_BH = pcase{
+			p292: FH_InsideOut{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p293: FH_InsideIn{ball=6} -> Ply2_de_stroke_Prev_FH
+			p294: FH_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p295: BH_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p296: BH_Downline{ball=6} -> Ply2_de_stroke_Prev_BH
+			p297: BH_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p298: FHLob_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p299: FHLob_Downline{ball=6} -> Ply2_de_stroke_Prev_FH
+			p300: FHLob_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p301: BHLob_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p302: BHLob_Downline{ball=6} -> Ply2_de_stroke_Prev_BH
+			p303: BHLob_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p304: FHVolley_InsideIn{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p305: FHVolley_InsideOut{ball=6} -> Ply2_de_stroke_Prev_FH
+			p306: FHVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p307: BHVolley_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p308: BHVolley_Downline{ball=6} -> Ply2_de_stroke_Prev_BH
+			p309: BHVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p310: FHSmash_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p311: FHSmash_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p312: FHSmash_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p313: BHSmash_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p314: BHSmash_Downline{ball=6} -> Ply2_de_stroke_Prev_BH
+			p315: BHSmash_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p316: FHSlice_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p317: FHSlice_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p318: FHSlice_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p319: BHSlice_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p320: BHSlice_Downline{ball=6} -> Ply2_de_stroke_Prev_BH
+			p321: BHSlice_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p322: FHDropShot_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p323: FHDropShot_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p324: FHDropShot_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p325: BHDropShot_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p326: BHDropShot_Downline{ball=6} -> Ply2_de_stroke_Prev_BH
+			p327: BHDropShot_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p328: FHHalfVolley_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p329: FHHalfVolley_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p330: FHHalfVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p331: BHHalfVolley_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p332: BHHalfVolley_Downline{ball=6} -> Ply2_de_stroke_Prev_BH
+			p333: BHHalfVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p334: FHSwingingVolley_Downline{ball=4} -> Ply2_ad_stroke_Prev_FH
+			p335: FHSwingingVolley_Crosscourt{ball=6} -> Ply2_de_stroke_Prev_FH
+			p336: FHSwingingVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_FH
+			p337: BHSwingingVolley_Crosscourt{ball=4} -> Ply2_ad_stroke_Prev_BH
+			p338: BHSwingingVolley_Downline{ball=6} -> Ply2_de_stroke_Prev_BH
+			p339: BHSwingingVolley_DownMid{ball=5} -> Ply2_mid_stroke_Prev_BH
+			p340: Winner{ball=9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p341: Error{ball=9} -> {nscore++; if (nscore == points) {won = player2}
+      		                                                     else { turn = (turn+1)%4} }-> NextPt  
+	};
+
+De_Ply2Serve = pcase {
+			p342: ServeT_in{ball=2} -> Ply1_BackHandR
+			p343: ServeBody_in{ball=1} -> (Ply1_ForeHandR [] Ply1_BackHandR)
+			p344: ServeWide_in{ball=1} -> Ply1_ForeHandR
+			p345: Serve_Winner{ball=9} -> NWinner{nscore++; if (nscore == points) {won = player2} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p346: Serve_err{ball=9} -> De_Ply2Serve_2nd}; 
+
+De_Ply2Serve_2nd = pcase {                 //1st serve is out
+			p347: ServeT_in{ball=2} -> Ply1_BackHandR
+			p348: ServeBody_in{ball=1} -> (Ply1_ForeHandR [] Ply1_BackHandR)
+			p349: ServeWide_in{ball=1} -> Ply1_ForeHandR
+			p350: Serve_Winner{ball=9} -> NWinner{nscore++; if (nscore == points) {won = player2} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p351: Serve_err{ball=9} -> Ndoublefault{fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+     		 };
+     		 
+Ad_Ply2Serve = pcase {
+			p352: ServeT_in{ball=2} -> Ply1_ForeHandR
+			p353: ServeBody_in{ball=3} -> (Ply1_ForeHandR [] Ply1_BackHandR)
+			p354: ServeWide_in{ball=3} -> Ply1_BackHandR
+			p355: Serve_Winner{ball=9} -> NWinner{nscore++; if (nscore == points) {won = player2} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p356: Serve_err{ball=9} -> Ad_Ply2Serve_2nd}; 
+
+Ad_Ply2Serve_2nd = pcase {                 //1st serve is out
+			p357: ServeT_in{ball=2} -> Ply1_ForeHandR
+			p358: ServeBody_in{ball=3} -> (Ply1_ForeHandR [] Ply1_BackHandR)
+			p359: ServeWide_in{ball=3} -> Ply1_BackHandR
+			p360: Serve_Winner{ball=9} -> NWinner{nscore++; if (nscore == points) {won = player2} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p361: Serve_err{ball=9} -> Ndoublefault{fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+     		 };
+     		 
+Ply2_ForeHandR = ifa (turn == f_de_ct) {    // Player2 backhand return to Player1 serve from the deuce court side
+		  pcase {
+			p362: FH_InsideOut{ball = 1} -> Ply1_de_stroke_Prev_FH 
+			p363: FH_InsideIn{ball = 3} -> Ply1_ad_stroke_Prev_FH 
+			p364: FH_CrossCourt{ball = 3} -> Ply1_ad_stroke_Prev_FH 
+			p365: FH_DownMid{ball = 2} -> Ply1_mid_stroke_Prev_FH 
+			p366: FH_Winner{ball=9} -> {nscore++; if (nscore == points) {won = player2} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p367: FH_Error{ball = 9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+      		 }}
+      		 else {
+      		pcase {
+      			p368: FH_CrossCourt{ ball = 3} -> Ply1_ad_stroke_Prev_FH 
+			p369: FH_DownLine{ball = 1} -> Ply1_de_stroke_Prev_FH 
+			p370: FH_DownMid{ ball = 2} -> Ply1_mid_stroke_Prev_FH 
+			p371: FH_Winner{ball = 9} -> {nscore++; if (nscore == points) {won = player2} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p372: FH_Error{ball = 9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+      		 }};
+      		 
+Ply2_BackHandR = ifa (turn == f_de_ct) {    // Player2 forehand return to Player1 serve from the deuce court side
+			pcase {
+			p373: BH_CrossCourt{ball = 1} -> Ply1_de_stroke_Prev_BH 
+			p374: BH_DownLine{ball = 3} -> Ply1_ad_stroke_Prev_BH 
+			p375: BH_DownMid{ball = 2} -> Ply1_mid_stroke_Prev_BH 
+			p376: BH_Winner{ball = 9} -> {nscore++; if (nscore == points) {won = player2} 
+      		                                                      else { turn = (turn+1)%4} }-> NextPt
+			p377: BH_Error{ball = 9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+      		 }}
+      		 else {
+      		pcase {
+			p378: BH_CrossCourt{ball = 1} -> Ply1_de_stroke_Prev_BH 
+			p379: BH_InsideIn{ball = 1} -> Ply1_de_stroke_Prev_BH 
+			p380: BH_InsideOut{ball = 3} -> Ply1_ad_stroke_Prev_BH 
+			p381: BH_DownMid{ball = 2} -> Ply1_mid_stroke_Prev_BH 
+			p382: BH_Winner{ball = 9} -> {nscore++; if (nscore == points) {won = player2} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p383: BH_Error{ball = 9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt			
+      		 }};
+
+// deuce stroke is when player2 hit position is 6
+Ply2_de_stroke_Prev_FH = pcase{
+			p384: FH_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p385: FH_InsideIn{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p386: FH_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p387: BH_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p388: BH_Downline{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p389: BH_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p390: FHLob_InsideOut{ball=1} -> Ply1_de_stroke_Prev_BH
+			p391: FHLob_InsideIn{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p392: FHLob_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p393: BHLob_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p394: BHLob_Downline{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p395: BHLob_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p396: FHVolley_InsideOut{ball=1} -> Ply1_de_stroke_Prev_BH
+			p397: FHVolley_InsideIn{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p398: FHVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p399: BHVolley_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p400: BHVolley_Downline{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p401: BHVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p402: FHSmash_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p403: FHSmash_InsideIn{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p404: FHSmash_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p405: BHSmash_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p406: BHSmash_Downline{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p407: BHSmash_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH	
+			p408: FHSlice_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p409: FHSlice_InsideIn{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p410: FHSlice_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p411: BHSlice_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p412: BHSlice_Downline{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p413: BHSlice_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p414: FHDropShot_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p415: FHDropShot_InsideIn{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p416: FHDropShot_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p417: BHDropShot_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p418: BHDropShot_Downline{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p419: BHDropShot_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p420: FHHalfVolley_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p421: FHHalfVolley_InsideIn{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p422: FHHalfVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p423: BHHalfVolley_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p424: BHHalfVolley_Downline{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p425: BHHalfVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p426: FHSwingingVolley_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p427: FHSwingingVolley_InsideIn{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p428: FHSwingingVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p429: BHSwingingVolley_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p430: BHSwingingVolley_Downline{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p431: BHSwingingVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH			
+			p432: Winner{ball=9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p433: Error{ball=9} -> {nscore++; if (nscore == points) {won = player2}
+      		                                                     else { turn = (turn+1)%4} }-> NextPt  
+	};
+
+// mid stroke is when player2 hit position is 5
+Ply2_mid_stroke_Prev_FH = pcase{
+			p434: FH_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p435: FH_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p436: FH_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p437: BH_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p438: BH_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p439: BH_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p440: FHLob_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p441: FHLob_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p442: FHLob_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p443: BHLob_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p444: BHLob_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p445: BHLob_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p446: FHVolley_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p447: FHVolley_Crosscourt{ball=3} -> Ply1_de_stroke_Prev_FH
+			p448: FHVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p449: BHVolley_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p450: BHVolley_InsideOut{ball=4} -> Ply1_ad_stroke_Prev_BH
+			p451: BHVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p452: FHSmash_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p453: FHSmash_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p454: FHSmash_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p455: BHSmash_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p456: BHSmash_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p457: BHSmash_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p458: FHSlice_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p459: FHSlice_Crosscourt{ball=4} -> Ply1_ad_stroke_Prev_FH
+			p460: FHSlice_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p461: BHSlice_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p462: BHSlice_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p463: BHSlice_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p464: FHDropshot_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p465: FHDropshot_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p466: FHDropshot_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p467: BHDropshot_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p468: BHDropshot_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p469: BHDropshot_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p470: FHHalfVolley_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p471: FHHalfVolley_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p472: FHHalfVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p473: BHHalfVolley_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p474: BHHalfVolley_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p475: BHHalfVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p476: FHSwingingVolley_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p477: FHSwingingVolley_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p478: FHSwingingVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p479: BHSwingingVolley_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p480: BHSwingingVolley_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p481: BHSwingingVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p482: Winner{ball=9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p483: Error{ball=9} -> {nscore++; if (nscore == points) {won = player2}
+      		                                                     else { turn = (turn+1)%4} }-> NextPt    
+	};
+
+// ad stroke is when player 2 hit position is 4
+Ply2_ad_stroke_Prev_FH = pcase{
+			p484: FH_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p485: FH_Downline{ball=1} -> Ply1_de_stroke_Prev_FH
+			p486: FH_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p487: BH_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p488: BH_InsideIn{ball=1} -> Ply1_de_stroke_Prev_BH
+			p489: BH_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p490: FHLob_Downline{ball=1} -> Ply1_de_stroke_Prev_FH			
+			p491: FHLob_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p492: FHLob_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p493: BHLob_InsideIn{ball=1} -> Ply1_de_stroke_Prev_BH
+			p494: BHLob_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p495: BHLob_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p496: FHVolley_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p497: FHVolley_Downline{ball=1} -> Ply1_de_stroke_Prev_FH
+			p498: FHVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p499: BHVolley_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p500: BHVolley_InsideIn{ball=1} -> Ply1_de_stroke_Prev_BH
+			p501: BHVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p502: FHSmash_Downline{ball=1} -> Ply1_de_stroke_Prev_FH			
+			p503: FHSmash_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p504: FHSmash_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p505: BHSmash_InsideIn{ball=1} -> Ply1_de_stroke_Prev_BH
+			p506: BHSmash_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p507: BHSmash_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p508: FHSlice_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p509: FHSlice_Downline{ball=1} -> Ply1_de_stroke_Prev_FH
+			p510: FHSlice_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p511: BHSlice_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p512: BHSlice_InsideIn{ball=1} -> Ply1_de_stroke_Prev_BH
+			p513: BHSlice_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p514: FHDropshot_Downline{ball=1} -> Ply1_de_stroke_Prev_FH			
+			p515: FHDropshot_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p516: FHDropshot_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p517: BHDropshot_InsideIn{ball=1} -> Ply1_de_stroke_Prev_BH
+			p518: BHDropshot_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p519: BHDropshot_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p520: FHHalfVolley_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p521: FHHalfVolley_Downline{ball=1} -> Ply1_de_stroke_Prev_FH
+			p522: FHHalfVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p523: BHHalfVolley_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p524: BHHalfVolley_InsideIn{ball=1} -> Ply1_de_stroke_Prev_BH
+			p525: BHHalfVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p526: FHSwingingVolley_Downline{ball=1} -> Ply1_de_stroke_Prev_FH			
+			p527: FHSwingingVolley_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p528: FHSwingingVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p529: BHSwingingVolley_InsideIn{ball=1} -> Ply1_de_stroke_Prev_BH
+			p530: BHSwingingVolley_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p531: BHSwingingVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p532: Winner{ball=9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p533: Error{ball=9} -> {nscore++; if (nscore == points) {won = player2}
+      		                                                     else { turn = (turn+1)%4} }-> NextPt  
+	};  
+
+// deuce stroke is when player2 hit position is 6
+Ply2_de_stroke_Prev_BH = pcase{
+			p534: FH_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p535: FH_InsideIn{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p536: FH_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p537: BH_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p538: BH_Downline{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p539: BH_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p540: FHLob_InsideOut{ball=1} -> Ply1_de_stroke_Prev_BH
+			p541: FHLob_InsideIn{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p542: FHLob_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p543: BHLob_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p544: BHLob_Downline{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p545: BHLob_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p546: FHVolley_InsideOut{ball=1} -> Ply1_de_stroke_Prev_BH
+			p547: FHVolley_InsideIn{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p548: FHVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p549: BHVolley_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p550: BHVolley_Downline{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p551: BHVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p552: FHSmash_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p553: FHSmash_InsideIn{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p554: FHSmash_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p555: BHSmash_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p556: BHSmash_Downline{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p557: BHSmash_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH	
+			p558: FHSlice_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p559: FHSlice_InsideIn{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p560: FHSlice_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p561: BHSlice_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p562: BHSlice_Downline{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p563: BHSlice_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p564: FHDropShot_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p565: FHDropShot_InsideIn{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p566: FHDropShot_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p567: BHDropShot_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p568: BHDropShot_Downline{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p569: BHDropShot_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p570: FHHalfVolley_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p571: FHHalfVolley_InsideIn{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p572: FHHalfVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p573: BHHalfVolley_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p574: BHHalfVolley_Downline{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p575: BHHalfVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p576: FHSwingingVolley_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p577: FHSwingingVolley_InsideIn{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p578: FHSwingingVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p579: BHSwingingVolley_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p580: BHSwingingVolley_Downline{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p581: BHSwingingVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH			
+			p582: Winner{ball=9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p583: Error{ball=9} -> {nscore++; if (nscore == points) {won = player2}
+      		                                                     else { turn = (turn+1)%4} }-> NextPt  
+	};
+
+// mid stroke is when player2 hit position is 5
+Ply2_mid_stroke_Prev_BH = pcase{
+			p584: FH_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p585: FH_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p586: FH_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p587: BH_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p588: BH_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p589: BH_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p590: FHLob_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p591: FHLob_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p592: FHLob_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p593: BHLob_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p594: BHLob_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p595: BHLob_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p596: FHVolley_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p597: FHVolley_Crosscourt{ball=3} -> Ply1_de_stroke_Prev_FH
+			p598: FHVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p599: BHVolley_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p600: BHVolley_InsideOut{ball=4} -> Ply1_ad_stroke_Prev_BH
+			p601: BHVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p602: FHSmash_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p603: FHSmash_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p604: FHSmash_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p605: BHSmash_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p606: BHSmash_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p607: BHSmash_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p608: FHSlice_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p609: FHSlice_Crosscourt{ball=4} -> Ply1_ad_stroke_Prev_FH
+			p610: FHSlice_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p611: BHSlice_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p612: BHSlice_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p613: BHSlice_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p614: FHDropshot_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p615: FHDropshot_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p616: FHDropshot_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p617: BHDropshot_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p618: BHDropshot_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p619: BHDropshot_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p620: FHHalfVolley_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p621: FHHalfVolley_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p622: FHHalfVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p623: BHHalfVolley_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p624: BHHalfVolley_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p625: BHHalfVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p626: FHSwingingVolley_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p627: FHSwingingVolley_InsideOut{ball=1} -> Ply1_de_stroke_Prev_FH
+			p628: FHSwingingVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p629: BHSwingingVolley_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p630: BHSwingingVolley_Crosscourt{ball=1} -> Ply1_de_stroke_Prev_BH
+			p631: BHSwingingVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p632: Winner{ball=9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p633: Error{ball=9} -> {nscore++; if (nscore == points) {won = player2}
+      		                                                     else { turn = (turn+1)%4} }-> NextPt    
+	};
+
+// ad stroke is when player 2 hit position is 4
+Ply2_ad_stroke_Prev_BH = pcase{
+			p634: FH_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p635: FH_Downline{ball=1} -> Ply1_de_stroke_Prev_FH
+			p636: FH_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p637: BH_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p638: BH_InsideIn{ball=1} -> Ply1_de_stroke_Prev_BH
+			p639: BH_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p640: FHLob_Downline{ball=1} -> Ply1_de_stroke_Prev_FH			
+			p641: FHLob_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p642: FHLob_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p643: BHLob_InsideIn{ball=1} -> Ply1_de_stroke_Prev_BH
+			p644: BHLob_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p645: BHLob_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p646: FHVolley_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p647: FHVolley_Downline{ball=1} -> Ply1_de_stroke_Prev_FH
+			p648: FHVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p649: BHVolley_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p650: BHVolley_InsideIn{ball=1} -> Ply1_de_stroke_Prev_BH
+			p651: BHVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p652: FHSmash_Downline{ball=1} -> Ply1_de_stroke_Prev_FH			
+			p653: FHSmash_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p654: FHSmash_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p655: BHSmash_InsideIn{ball=1} -> Ply1_de_stroke_Prev_BH
+			p656: BHSmash_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p657: BHSmash_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p658: FHSlice_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p659: FHSlice_Downline{ball=1} -> Ply1_de_stroke_Prev_FH
+			p660: FHSlice_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p661: BHSlice_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p662: BHSlice_InsideIn{ball=1} -> Ply1_de_stroke_Prev_BH
+			p663: BHSlice_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p664: FHDropshot_Downline{ball=1} -> Ply1_de_stroke_Prev_FH			
+			p665: FHDropshot_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p666: FHDropshot_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p667: BHDropshot_InsideIn{ball=1} -> Ply1_de_stroke_Prev_BH
+			p668: BHDropshot_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p669: BHDropshot_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p670: FHHalfVolley_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p671: FHHalfVolley_Downline{ball=1} -> Ply1_de_stroke_Prev_FH
+			p672: FHHalfVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p673: BHHalfVolley_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p674: BHHalfVolley_InsideIn{ball=1} -> Ply1_de_stroke_Prev_BH
+			p675: BHHalfVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p676: FHSwingingVolley_Downline{ball=1} -> Ply1_de_stroke_Prev_FH			
+			p677: FHSwingingVolley_Crosscourt{ball=3} -> Ply1_ad_stroke_Prev_FH
+			p678: FHSwingingVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_FH
+			p679: BHSwingingVolley_InsideIn{ball=1} -> Ply1_de_stroke_Prev_BH
+			p680: BHSwingingVolley_InsideOut{ball=3} -> Ply1_ad_stroke_Prev_BH
+			p681: BHSwingingVolley_DownMid{ball=2} -> Ply1_mid_stroke_Prev_BH
+			p682: Winner{ball=9} -> {fscore++; if (fscore == points) {won = player1} 
+      		                                                     else { turn = (turn+1)%4} }-> NextPt
+			p683: Error{ball=9} -> {nscore++; if (nscore == points) {won = player2}
+      		                                                     else { turn = (turn+1)%4} }-> NextPt  
+	};  		             
+
+#define player1Win won == player1;
+#assert TieBreakGame reaches player1Win with prob;
