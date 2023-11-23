@@ -1,0 +1,7 @@
+# Ignore tennisabstract csv files, to be downloaded by user
+/model_1/tennisabstract-v2-combined.csv
+/model_2/tennisabstract-v2-combined.csv
+
+# Ignore folder containing  generated pcsp files
+/model_1/pcsp_files
+/model_2/pcsp_files
