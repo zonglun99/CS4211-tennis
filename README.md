@@ -68,5 +68,6 @@ python3 Generate_pcsp.py
 ```
 
 ## Disclaimer
-The running the above steps requires the environment to be set up properly, in case of missing packages,
+* Please run all commands in the Linux command line interface (CLI)
+* The running the above steps requires the environment to be set up properly, in case of missing packages,
 do `pip install {package name}`.
