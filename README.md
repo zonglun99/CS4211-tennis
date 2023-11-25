@@ -12,7 +12,7 @@ League. We invite you to apply the PMC technique to extend the tennis or soccer 
 to create a model for a basketball game (NBA). Through this project, we hope you gain
 experience in modeling a realistic system using CSP# (PAT).
 To help you, we would like to offer the following tips:
-* Use proper abstraction to model the states, the state transitions and the player’s
+* Use proper abstraction to model the states, the state transitions, and the player’s
 choices. We have provided tennis and soccer models as examples.
 * Part of the challenge is to estimate the probabilities in your model. We have
 listed data sources and scripts for this purpose.
@@ -37,10 +37,10 @@ to account for:
 * All shot types
 * All shot types & Previous shots
 
-### Generate pcsp files
-1. Download [data](https://www.tennisabstract.com/charting/meta.html) from the website, make sure that all the data is collated into a csv file. Alternatively, download it from [here](https://drive.google.com/file/d/1pHo8PfkGxdgjsHljUf9poEF_vxhdzTA0/view?usp=sharing).
+### Generate PCSP files
+1. Download [data](https://www.tennisabstract.com/charting/meta.html) from the website, and make sure that all the data is collated into a CSV file. Alternatively, download it from [here](https://drive.google.com/file/d/1pHo8PfkGxdgjsHljUf9poEF_vxhdzTA0/view?usp=sharing).
 2. Place it in the same folder as one of the models, `model_1` or `model_2`.
-3. Run the command below to generate a list of **253** pcsp files for a set of players into the folder `pcsp_files`.
+3. Run the command below to generate a list of **253** PCSP files for various pairs of players into the folder `pcsp_files`.
 ```
 python3 Generate_pcsp.py
 ``` 
@@ -49,7 +49,7 @@ python3 Generate_pcsp.py
 1. Download [PAT](https://www.comp.nus.edu.sg/~pat/PAT351.zip) or visit the [website](https://pat.comp.nus.edu.sg/?page_id=2660) for download instructions.
 2. Transfer the files from `pcsp_files` to the same directory as `PAT351`.
 3. Move the `\model_1\pcsp.sh` file to the same directory as `PAT351`.
-4. Run the command below to generate a list of txt files verified by PAT into the folder `pcsp_out`.
+4. Run the command below to generate a list of TXT files verified by PAT into the folder `pcsp_out`.
 ```
 bash pcsp.sh
 ``` 
@@ -57,11 +57,11 @@ bash pcsp.sh
 5. Move the `pcsp_out` folder back to either the model folder.
 
 ### Evaluating model with betting simulation
-1. Run the command below to generate output.csv file containing all the winning probabilities for a set of players.
+1. Run the command below to generate an `output.csv` file containing all the winning probabilities for a set of players.
 ```
 python3 extract_MDP.py
 ```
-2. Check the naming of the csv file in `Betting_Simulation.py`, making sure that it is `output.csv`.
+2. Check the naming of the CSV file in `Betting_Simulation.py`, making sure that it is `output.csv`.
 3. Run the command below `python3 Betting_Simulation.py` to get the evaluation results.
 ```
 python3 extract_MDP.py
@@ -69,7 +69,7 @@ python3 extract_MDP.py
 
 ## Disclaimer
 * Please run all commands in the Linux command line interface (CLI)
-* The running the above steps requires the environment to be set up properly, in case of missing packages,
+* Running the above steps requires the environment to be set up properly, in case of missing packages,
 do the following command, but replace `{package name}` with the missing package.
 ```
 pip install {package name}
